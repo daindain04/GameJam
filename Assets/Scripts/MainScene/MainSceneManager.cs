@@ -1,24 +1,26 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class MainSceneManager : MonoBehaviour
 {
     [Header("버튼들")]
     public Button artButton;
     public Button techButton;
-    public Button designButton; // ★ 추가
+    public Button designButton;
     public Button resultButton;
 
     [Header("점수 텍스트들")]
     public TextMeshProUGUI artScoreText;
     public TextMeshProUGUI techScoreText;
-    public TextMeshProUGUI designScoreText; // ★ 추가
+    public TextMeshProUGUI designScoreText;
 
     [Header("씬 이름들")]
     public string artSceneName = "Art";
     public string techSceneName = "Tech";
-    public string designSceneName = "Design"; // ★ 추가
+    public string designSceneName = "Design";
+    public string resultSceneName = "Result"; // ★ 추가
 
     void Start()
     {
@@ -33,7 +35,7 @@ public class MainSceneManager : MonoBehaviour
             techButton.onClick.AddListener(() => OnGameButtonClick(techSceneName));
         }
 
-        if (designButton != null) // ★ 추가
+        if (designButton != null)
         {
             designButton.onClick.AddListener(() => OnGameButtonClick(designSceneName));
         }
@@ -57,13 +59,53 @@ public class MainSceneManager : MonoBehaviour
         }
         else
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+            SceneManager.LoadScene(sceneName);
         }
     }
 
     void OnResultButtonClick()
     {
-        Debug.Log("결과 보기");
+        Debug.Log("결과 보기 - 총점 계산 중...");
+
+        // 각 게임의 점수 계산
+        int artTotal = CalculateGameTotal("Art");
+        int techTotal = CalculateGameTotal("Tech");
+        int designTotal = CalculateGameTotal("Design");
+
+        int finalScore = artTotal + techTotal + designTotal;
+
+        Debug.Log($"Art: {artTotal}점, Tech: {techTotal}점, Design: {designTotal}점 = 총합: {finalScore}점");
+
+        // 총점을 PlayerPrefs에 저장
+        PlayerPrefs.SetInt("FinalTotalScore", finalScore);
+        PlayerPrefs.Save();
+
+        // Result 씬으로 이동
+        if (FadeManager.Instance != null)
+        {
+            FadeManager.Instance.FadeOutAndLoadScene(resultSceneName);
+        }
+        else
+        {
+            SceneManager.LoadScene(resultSceneName);
+        }
+    }
+
+    int CalculateGameTotal(string gameType)
+    {
+        int result = PlayerPrefs.GetInt(gameType + "GameResult", 0);
+
+        // 실패한 게임은 0점
+        if (result == 0)
+        {
+            return 0;
+        }
+
+        // 성공한 게임: 기본 점수 + 보너스 점수
+        int lastScore = PlayerPrefs.GetInt(gameType + "LastScore", 0);
+        int bonusScore = PlayerPrefs.GetInt(gameType + "BonusScore", 0);
+
+        return lastScore + bonusScore;
     }
 
     public void UpdateScoreDisplays()
@@ -76,7 +118,7 @@ public class MainSceneManager : MonoBehaviour
         // Tech 점수 표시
         UpdateSingleScore(techScoreText, "Tech", selectedCharacter == "Programmer");
 
-        // Design 점수 표시 ★ 추가
+        // Design 점수 표시
         UpdateSingleScore(designScoreText, "Design", selectedCharacter == "Designer");
     }
 
