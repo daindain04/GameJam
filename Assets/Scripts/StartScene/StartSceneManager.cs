@@ -33,4 +33,18 @@ public class StartSceneManager : MonoBehaviour
     {
         if (explainPanel != null) explainPanel.SetActive(false);
     }
+
+    // 게임 종료 버튼에 연결
+    public void OnClickQuit()
+    {
+        Debug.Log("게임 종료");
+
+#if UNITY_EDITOR
+        // 에디터에서는 플레이 모드 종료
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        // 빌드된 게임에서는 애플리케이션 종료
+        Application.Quit();
+#endif
+    }
 }

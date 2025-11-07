@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -35,6 +36,26 @@ public class ArtGameManager : MonoBehaviour
     public GameObject successPanel;
     public GameObject failPanel;
 
+    [Header("카운트다운")]
+    public GameObject countdownPanel;
+    public Image countdownImage;
+    public Sprite count3Sprite;
+    public Sprite count2Sprite;
+    public Sprite count1Sprite;
+    public float countdownDuration = 1f;
+
+    [Header("방해 공작 시스템")]
+    public GameObject sleepTextPanel; // 졸음 글자 패널
+    public Sprite[] sleepSprites; // 졸음 글자 스프라이트들
+    public Image sleepImagePrefab; // 졸음 이미지 프리팹
+    public int sleepImageCount = 15; // 생성할 졸음 이미지 개수
+    public float sleepDuration = 2f; // 졸음 지속 시간
+    public float sleepSpawnInterval = 0.1f; // 졸음 이미지 생성 간격
+    public float sleepFallSpeedMin = 200f; // 최소 낙하 속도
+    public float sleepFallSpeedMax = 400f; // 최대 낙하 속도
+    public float mouseSensitivityDuration = 5f; // 마우스 감도 이상 지속 시간
+    public float abnormalSensitivity = 3f; // 비정상 마우스 감도 배율
+
     [Header("메인 씬 이름")]
     public string mainSceneName = "Main";
 
@@ -43,12 +64,23 @@ public class ArtGameManager : MonoBehaviour
     private bool isGameRunning = false;
     private int bonusScore = 0;
 
+    private bool sleepObstacleUsed = false;
+    private bool mouseObstacleUsed = false;
+    private float mouseSensitivityMultiplier = 1f;
+
+    // 떨어지는 이미지 정보 저장용 클래스
+    private class FallingSleepImage
+    {
+        public GameObject gameObject;
+        public RectTransform rectTransform;
+        public float fallSpeed;
+    }
+
     void Start()
     {
         currentDifferences = totalDifferences;
         timeLeft = gameTime;
 
-        // 보너스 점수 로드
         bonusScore = PlayerPrefs.GetInt("ArtBonusScore", 0);
 
         if (bonusScore > 0)
@@ -56,7 +88,6 @@ public class ArtGameManager : MonoBehaviour
             Debug.Log("Artist 직군 보너스: +" + bonusScore + "점");
         }
 
-        // Timer Fill Image 설정
         if (timerFillImage != null)
         {
             if (timerFillImage.type != Image.Type.Filled)
@@ -69,11 +100,215 @@ public class ArtGameManager : MonoBehaviour
 
         if (successPanel != null) successPanel.SetActive(false);
         if (failPanel != null) failPanel.SetActive(false);
+        if (sleepTextPanel != null) sleepTextPanel.SetActive(false);
 
         UpdateUI();
         SelectRandomPainting();
 
+        StartCoroutine(CountdownSequence());
+    }
+
+    IEnumerator CountdownSequence()
+    {
+        if (countdownPanel != null)
+        {
+            countdownPanel.SetActive(true);
+        }
+
+        if (countdownImage != null && count3Sprite != null)
+        {
+            countdownImage.sprite = count3Sprite;
+        }
+        yield return new WaitForSeconds(countdownDuration);
+
+        if (countdownImage != null && count2Sprite != null)
+        {
+            countdownImage.sprite = count2Sprite;
+        }
+        yield return new WaitForSeconds(countdownDuration);
+
+        if (countdownImage != null && count1Sprite != null)
+        {
+            countdownImage.sprite = count1Sprite;
+        }
+        yield return new WaitForSeconds(countdownDuration);
+
+        if (countdownPanel != null)
+        {
+            countdownPanel.SetActive(false);
+        }
+
         isGameRunning = true;
+        Debug.Log("게임 시작!");
+
+        // 방해 공작 스케줄링
+        StartCoroutine(ScheduleObstacles());
+    }
+
+    IEnumerator ScheduleObstacles()
+    {
+        // 게임 시간을 3등분하여 각 구간에서 방해 공작 발동
+        float thirdTime = gameTime / 3f;
+
+        // 첫 번째 구간에서 랜덤 타이밍
+        float firstObstacleTime = Random.Range(5f, thirdTime);
+        yield return new WaitForSeconds(firstObstacleTime);
+
+        if (isGameRunning)
+        {
+            TriggerRandomObstacle();
+        }
+
+        // 두 번째 구간에서 랜덤 타이밍
+        float secondObstacleTime = Random.Range(thirdTime, thirdTime * 2f) - firstObstacleTime;
+        yield return new WaitForSeconds(secondObstacleTime);
+
+        if (isGameRunning)
+        {
+            TriggerRandomObstacle();
+        }
+    }
+
+    void TriggerRandomObstacle()
+    {
+        // 아직 사용하지 않은 방해 공작 중에서 선택
+        bool canUseSleep = !sleepObstacleUsed;
+        bool canUseMouse = !mouseObstacleUsed;
+
+        if (!canUseSleep && !canUseMouse) return;
+
+        int obstacleType;
+
+        if (canUseSleep && canUseMouse)
+        {
+            obstacleType = Random.Range(0, 2); // 0: 졸음, 1: 마우스
+        }
+        else if (canUseSleep)
+        {
+            obstacleType = 0;
+        }
+        else
+        {
+            obstacleType = 1;
+        }
+
+        if (obstacleType == 0)
+        {
+            StartCoroutine(SleepObstacle());
+        }
+        else
+        {
+            StartCoroutine(MouseSensitivityObstacle());
+        }
+    }
+
+    IEnumerator SleepObstacle()
+    {
+        sleepObstacleUsed = true;
+        Debug.Log("졸음 방해 공작 발동!");
+
+        if (sleepTextPanel != null && sleepImagePrefab != null && sleepSprites != null && sleepSprites.Length > 0)
+        {
+            sleepTextPanel.SetActive(true);
+
+            List<FallingSleepImage> fallingImages = new List<FallingSleepImage>();
+
+            // 졸음 이미지를 불규칙하게 생성하고 떨어뜨리기
+            StartCoroutine(SpawnSleepImages(fallingImages));
+
+            // 낙하 애니메이션
+            float elapsedTime = 0f;
+            while (elapsedTime < sleepDuration)
+            {
+                elapsedTime += Time.deltaTime;
+
+                // 각 이미지를 개별 속도로 낙하
+                for (int i = fallingImages.Count - 1; i >= 0; i--)
+                {
+                    if (fallingImages[i].gameObject != null && fallingImages[i].rectTransform != null)
+                    {
+                        // 각자의 속도로 아래로 이동
+                        fallingImages[i].rectTransform.anchoredPosition +=
+                            Vector2.down * fallingImages[i].fallSpeed * Time.deltaTime;
+                    }
+                }
+
+                yield return null;
+            }
+
+            // 생성된 이미지들 제거
+            foreach (var fallingImage in fallingImages)
+            {
+                if (fallingImage.gameObject != null)
+                {
+                    Destroy(fallingImage.gameObject);
+                }
+            }
+
+            sleepTextPanel.SetActive(false);
+        }
+
+        Debug.Log("졸음 방해 공작 종료");
+    }
+
+    IEnumerator SpawnSleepImages(List<FallingSleepImage> fallingImages)
+    {
+        for (int i = 0; i < sleepImageCount; i++)
+        {
+            Image sleepImage = Instantiate(sleepImagePrefab, sleepTextPanel.transform);
+
+            // 랜덤 스프라이트 선택
+            sleepImage.sprite = sleepSprites[Random.Range(0, sleepSprites.Length)];
+
+            RectTransform rectTransform = sleepImage.GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                // 랜덤 위치 설정 (화면 위쪽에서 시작, X 위치도 더 넓게)
+                rectTransform.anchoredPosition = new Vector2(
+                    Random.Range(-600f, 600f),
+                    Random.Range(500f, 700f) // 화면 위쪽 넓은 범위
+                );
+
+                // 랜덤 크기
+                float scale = Random.Range(0.5f, 1.5f);
+                rectTransform.localScale = Vector3.one * scale;
+
+                // 회전 제거
+            }
+
+            // 각 이미지마다 다른 낙하 속도
+            FallingSleepImage fallingImage = new FallingSleepImage
+            {
+                gameObject = sleepImage.gameObject,
+                rectTransform = rectTransform,
+                fallSpeed = Random.Range(sleepFallSpeedMin, sleepFallSpeedMax)
+            };
+
+            fallingImages.Add(fallingImage);
+
+            // 불규칙한 간격으로 생성
+            yield return new WaitForSeconds(Random.Range(sleepSpawnInterval * 0.5f, sleepSpawnInterval * 1.5f));
+        }
+    }
+
+    IEnumerator MouseSensitivityObstacle()
+    {
+        mouseObstacleUsed = true;
+        Debug.Log("마우스 감도 이상 발동!");
+
+        mouseSensitivityMultiplier = abnormalSensitivity;
+
+        yield return new WaitForSeconds(mouseSensitivityDuration);
+
+        mouseSensitivityMultiplier = 1f;
+
+        Debug.Log("마우스 감도 정상화");
+    }
+
+    // 마우스 입력 처리 시 이 함수 사용
+    public float GetAdjustedMouseSensitivity()
+    {
+        return mouseSensitivityMultiplier;
     }
 
     void SelectRandomPainting()
@@ -163,6 +398,19 @@ public class ArtGameManager : MonoBehaviour
     {
         isGameRunning = false;
 
+        // 모든 방해 공작 중지
+        StopAllCoroutines();
+        if (sleepTextPanel != null)
+        {
+            // 모든 자식 오브젝트 제거
+            foreach (Transform child in sleepTextPanel.transform)
+            {
+                Destroy(child.gameObject);
+            }
+            sleepTextPanel.SetActive(false);
+        }
+        mouseSensitivityMultiplier = 1f;
+
         if (isSuccess)
         {
             int baseScore = Mathf.CeilToInt(timeLeft);
@@ -170,7 +418,6 @@ public class ArtGameManager : MonoBehaviour
 
             Debug.Log("게임 성공! 기본 점수: " + baseScore + "점, 보너스: " + bonusScore + "점, 총점: " + totalScore + "점");
 
-            // 점수 저장 (기본 점수만 저장, 보너스는 표시할 때 더함)
             PlayerPrefs.SetInt("ArtLastScore", baseScore);
             PlayerPrefs.SetInt("ArtGameResult", 1);
             PlayerPrefs.Save();
@@ -221,7 +468,6 @@ public class ArtGameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        // 페이드 아웃 후 메인 씬으로
         if (FadeManager.Instance != null)
         {
             FadeManager.Instance.FadeOutAndLoadScene(mainSceneName);
