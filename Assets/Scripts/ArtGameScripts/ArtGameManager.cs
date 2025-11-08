@@ -53,8 +53,7 @@ public class ArtGameManager : MonoBehaviour
     public float sleepSpawnInterval = 0.1f; // 졸음 이미지 생성 간격
     public float sleepFallSpeedMin = 200f; // 최소 낙하 속도
     public float sleepFallSpeedMax = 400f; // 최대 낙하 속도
-    public float mouseSensitivityDuration = 5f; // 마우스 감도 이상 지속 시간
-    public float abnormalSensitivity = 3f; // 비정상 마우스 감도 배율
+    public float imageFlipDuration = 3f; // 이미지 좌우반전 지속 시간
 
     [Header("메인 씬 이름")]
     public string mainSceneName = "Main";
@@ -65,8 +64,7 @@ public class ArtGameManager : MonoBehaviour
     private int bonusScore = 0;
 
     private bool sleepObstacleUsed = false;
-    private bool mouseObstacleUsed = false;
-    private float mouseSensitivityMultiplier = 1f;
+    private bool flipObstacleUsed = false;
 
     // 떨어지는 이미지 정보 저장용 클래스
     private class FallingSleepImage
@@ -173,15 +171,15 @@ public class ArtGameManager : MonoBehaviour
     {
         // 아직 사용하지 않은 방해 공작 중에서 선택
         bool canUseSleep = !sleepObstacleUsed;
-        bool canUseMouse = !mouseObstacleUsed;
+        bool canUseFlip = !flipObstacleUsed;
 
-        if (!canUseSleep && !canUseMouse) return;
+        if (!canUseSleep && !canUseFlip) return;
 
         int obstacleType;
 
-        if (canUseSleep && canUseMouse)
+        if (canUseSleep && canUseFlip)
         {
-            obstacleType = Random.Range(0, 2); // 0: 졸음, 1: 마우스
+            obstacleType = Random.Range(0, 2); // 0: 졸음, 1: 이미지 반전
         }
         else if (canUseSleep)
         {
@@ -198,7 +196,7 @@ public class ArtGameManager : MonoBehaviour
         }
         else
         {
-            StartCoroutine(MouseSensitivityObstacle());
+            StartCoroutine(ImageFlipObstacle());
         }
     }
 
@@ -272,8 +270,6 @@ public class ArtGameManager : MonoBehaviour
                 // 랜덤 크기
                 float scale = Random.Range(0.5f, 1.5f);
                 rectTransform.localScale = Vector3.one * scale;
-
-                // 회전 제거
             }
 
             // 각 이미지마다 다른 낙하 속도
@@ -291,24 +287,23 @@ public class ArtGameManager : MonoBehaviour
         }
     }
 
-    IEnumerator MouseSensitivityObstacle()
+    IEnumerator ImageFlipObstacle()
     {
-        mouseObstacleUsed = true;
-        Debug.Log("마우스 감도 이상 발동!");
+        flipObstacleUsed = true;
+        Debug.Log("이미지 좌우반전 방해 공작 발동!");
 
-        mouseSensitivityMultiplier = abnormalSensitivity;
+        if (originalImage != null)
+        {
+            // 원본 이미지 좌우반전 (기본 스케일 1.2 고려)
+            originalImage.transform.localScale = new Vector3(-1.2f, 1f, 1f);
 
-        yield return new WaitForSeconds(mouseSensitivityDuration);
+            yield return new WaitForSeconds(imageFlipDuration);
 
-        mouseSensitivityMultiplier = 1f;
+            // 원상복구
+            originalImage.transform.localScale = new Vector3(1.2f, 1f, 1f);
+        }
 
-        Debug.Log("마우스 감도 정상화");
-    }
-
-    // 마우스 입력 처리 시 이 함수 사용
-    public float GetAdjustedMouseSensitivity()
-    {
-        return mouseSensitivityMultiplier;
+        Debug.Log("이미지 좌우반전 종료");
     }
 
     void SelectRandomPainting()
@@ -409,7 +404,11 @@ public class ArtGameManager : MonoBehaviour
             }
             sleepTextPanel.SetActive(false);
         }
-        mouseSensitivityMultiplier = 1f;
+
+        if (originalImage != null)
+        {
+            originalImage.transform.localScale = new Vector3(1.2f, 1f, 1f);
+        }
 
         if (isSuccess)
         {
