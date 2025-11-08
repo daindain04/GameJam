@@ -184,24 +184,4 @@ public class FadeManager : MonoBehaviour
         SceneManager.LoadScene(sceneName);
     }
 
-#if UNITY_EDITOR
-    [Header("에디터 테스트")]
-    public KeyCode testFadeInKey = KeyCode.F;
-    public KeyCode testFadeOutKey = KeyCode.G;
-
-    void Update()
-    {
-        if (Input.GetKeyDown(testFadeInKey))
-        {
-            Debug.Log("F키: 페이드 인 테스트");
-            StartCoroutine(FadeIn());
-        }
-
-        if (Input.GetKeyDown(testFadeOutKey))
-        {
-            Debug.Log("G키: 페이드 아웃 테스트");
-            StartCoroutine(FadeOut());
-        }
-    }
-#endif
 }

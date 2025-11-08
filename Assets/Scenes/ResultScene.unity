@@ -342,7 +342,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 271513939}
         m_TargetAssemblyTypeName: ResultSceneManager, Assembly-CSharp
-        m_MethodName: OnClickRestart
+        m_MethodName: OnClickRetry
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -403,7 +403,7 @@ GameObject:
   - component: {fileID: 241365919}
   - component: {fileID: 241365918}
   m_Layer: 5
-  m_Name: MainButton
+  m_Name: ForgiveButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -475,7 +475,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 271513939}
         m_TargetAssemblyTypeName: ResultSceneManager, Assembly-CSharp
-        m_MethodName: OnClickMainMenu
+        m_MethodName: OnClickGiveUp
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -554,8 +554,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   successPanel: {fileID: 664719160}
   failPanel: {fileID: 572944094}
-  successScoreText: {fileID: 177426235}
-  failScoreText: {fileID: 1151740191}
+  successScoreText: {fileID: 1151740191}
+  failScoreText: {fileID: 177426235}
   mainSceneName: Main
   startSceneName: StartScene
   passScore: 300
@@ -683,7 +683,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &572944095
 RectTransform:
   m_ObjectHideFlags: 0
@@ -879,7 +879,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2DC\uC791\uD654\uBA74\uC73C\uB85C"
+  m_text: "\uC878\uC5C5!\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fc81d15b265d40448b63b5ca0ce5314e, type: 2}
   m_sharedMaterial: {fileID: 7469771634116615612, guid: fc81d15b265d40448b63b5ca0ce5314e, type: 2}
@@ -1103,7 +1103,7 @@ GameObject:
   - component: {fileID: 1208303006}
   - component: {fileID: 1208303005}
   m_Layer: 5
-  m_Name: MainButton
+  m_Name: GraduateButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1175,7 +1175,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 271513939}
         m_TargetAssemblyTypeName: ResultSceneManager, Assembly-CSharp
-        m_MethodName: OnClickMainMenu
+        m_MethodName: OnClickGraduate
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1280,7 +1280,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2DC\uC791\uD654\uBA74\uC73C\uB85C"
+  m_text: "\uD3EC\uAE30\uD558\uAE30\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fc81d15b265d40448b63b5ca0ce5314e, type: 2}
   m_sharedMaterial: {fileID: 7469771634116615612, guid: fc81d15b265d40448b63b5ca0ce5314e, type: 2}
@@ -1473,7 +1473,7 @@ GameObject:
   - component: {fileID: 1499663641}
   - component: {fileID: 1499663640}
   m_Layer: 5
-  m_Name: ReStartButton
+  m_Name: MoreButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1545,7 +1545,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 271513939}
         m_TargetAssemblyTypeName: ResultSceneManager, Assembly-CSharp
-        m_MethodName: OnClickRestart
+        m_MethodName: OnClickContinue
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1852,7 +1852,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uB2E4\uC2DC\uD558\uAE30"
+  m_text: "\uC880 \uB354 \uD558\uAE30!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: fc81d15b265d40448b63b5ca0ce5314e, type: 2}
   m_sharedMaterial: {fileID: 7469771634116615612, guid: fc81d15b265d40448b63b5ca0ce5314e, type: 2}

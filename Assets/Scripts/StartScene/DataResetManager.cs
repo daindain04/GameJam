@@ -6,9 +6,10 @@ public class DataResetManager : MonoBehaviour
     [SerializeField] private bool resetArtData = false;
     [SerializeField] private bool resetTechData = false;
     [SerializeField] private bool resetDesignData = false;
+    [SerializeField] private bool resetKnowHowData = false; // ★ 노하우 데이터 초기화
     [SerializeField] private bool resetAllData = false;
 
-    // ★ 데이터 초기화 함수들
+    // ★ 게임별 데이터 초기화 함수
     private void ResetGameData(string gameType)
     {
         PlayerPrefs.DeleteKey(gameType + "LastScore");
@@ -33,14 +34,28 @@ public class DataResetManager : MonoBehaviour
         ResetGameData("Design");
     }
 
+    // ★ 노하우 및 캐릭터 선택 관련 데이터 초기화
+    public void ResetKnowHowData()
+    {
+        PlayerPrefs.DeleteKey("KnowHow");
+        PlayerPrefs.DeleteKey("NeedCharacterSelection");
+        PlayerPrefs.Save();
+        Debug.Log("노하우 데이터 초기화 완료!");
+    }
+
+    // ★ 모든 게임 데이터 초기화 (노하우 포함)
     public void ResetAllGameData()
     {
         ResetArtData();
         ResetTechData();
         ResetDesignData();
+        ResetKnowHowData();
+
         PlayerPrefs.DeleteKey("SelectedCharacter");
+        PlayerPrefs.DeleteKey("FinalTotalScore");
         PlayerPrefs.Save();
-        Debug.Log("모든 게임 데이터 초기화 완료!");
+
+        Debug.Log("모든 게임 데이터 초기화 완료! (노하우 포함)");
     }
 
     // 인스펙터에서 체크박스로 초기화
@@ -70,6 +85,15 @@ public class DataResetManager : MonoBehaviour
             if (Application.isPlaying)
             {
                 ResetDesignData();
+            }
+        }
+
+        if (resetKnowHowData)
+        {
+            resetKnowHowData = false;
+            if (Application.isPlaying)
+            {
+                ResetKnowHowData();
             }
         }
 
